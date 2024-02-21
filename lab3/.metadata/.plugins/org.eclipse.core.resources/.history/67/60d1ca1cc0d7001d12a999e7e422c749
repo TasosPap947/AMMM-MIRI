@@ -1,0 +1,40 @@
+/*********************************************
+ * OPL 12.10.0.0 Model
+ * Author: anast
+ * Creation Date: Apr 10, 2023 at 5:28:12 PM
+ *********************************************/
+int nTasks=...;
+int nCPUs=...;
+int nCores=...;
+int nThreads=...;
+range T=1..nTasks;
+range C=1..nCPUs;
+range H=1..nThreads;
+range Cr=1..nCores;
+float rh[h in H]=...;
+float rc[c in C]=...;
+dvar float+ z;
+
+//Pre-processing
+
+// Objective function
+minimize z;
+
+// Constraints
+subject to {
+  
+// Constraint 1: Total load of one task should add up to 1 (meaning it can be assigned to 1 computer)
+forall(t in T)
+	sum(c in C) x_tc[t,c] == 1;
+
+// Constraint 2 : Total load in one computer should not exceed its capacity
+forall(c in C)
+	sum(t in T) rt[t]* x_tc[t,c] <= rc[c];
+	
+// Constraint 3 : Total load of all computers should not exceed the one with the biggest load
+forall(c in C)
+	z >= (1/rc[c])*sum(t in T) rt[t]* x_tc[t,c];
+	
+}
+
+//Post-processing

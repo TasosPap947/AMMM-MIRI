@@ -1,0 +1,95 @@
+/*********************************************
+ * OPL 22.1.1.0 Model
+ * Author: nikol
+ * Creation Date: 10 ��� 2023 at 4:58:00 �.�.
+ *********************************************/
+// Constants: Tasks, Threads, Computers, Cores
+int nTasks=...;
+int nThreads=...;
+int nCPUs=...;
+int nCores=...;
+range T=1..nTasks;
+range H=1..nThreads;
+range C=1..nCPUs;
+range K=1..nCores;
+// Data: Tasks, Computers 
+float rh[h in H]=...;
+float rc[c in C]=...;
+// Data: Cores of Computer, Threads of Task
+float CK[c in C, k in K]=...;
+float TH[t in T, h in H]=...;
+int H_t[T]; // number of threads for each task
+int K_c[C]; // number of cores for each CPU
+// Variables: Task in Computer, Thread in Core
+dvar boolean x_tc[t in T, c in C];
+dvar boolean x_hk[h in H, k in K];
+dvar float+ z;
+
+// Pre-processing
+execute {
+	var totalLoad=0;
+	var totalCapacity=0;
+	
+	/*for (var h=1; h<=nThreads; h++)
+		totalLoad += rh[h];
+		for (var t=1; t<=nTasks; t++)
+			H_t[t] += TH[t][h]; */
+			
+	for (var t=1; t<=nTasks; t++)
+		for (var h=1; h<nThreads; h++)
+			H_t[t] += TH [t][h];
+			totalLoad += rh[h]; 
+			
+	for (var c=1;c<=nCPUs;c++){
+		for (var k=1; k<=nCores;k++)
+  			totalCapacity += rc[c]*CK[c][k];
+  			K_c[c] += CK[c][k];
+   }  			
+	
+	writeln("Total load "+ totalLoad);
+	writeln("Total capacity "+ totalCapacity);
+	
+	if (totalLoad > totalCapacity) {
+  	  writeln("Computers do not have enough capacity");
+  	}
+  	else {
+  	  writeln("Computers have enough capacity");
+  	}
+};
+
+// Objective function
+minimize z;
+
+// Constraints
+subject to {
+  
+// Constraint 1: Each thread should be assigned to only 1 core
+forall(h in H)
+  sum(k in K) x_hk[h,k] == 1;
+  
+// Constraint 2: All threads of the same task should be assigned to cores of the same CPU
+forall(t in T, c in C)
+//  forall(c in C)
+  	sum(h in H, k in K)  x_hk[h,k]* TH[t, h]* CK[c, k] == H_t[t]* x_tc[t,c];
+  
+// Constraint 3: Capacity of one CPU should not be excheeded
+forall(c in C, k in K)
+  	sum(h in H) rh[h]* x_hk[h,k]* CK[c,k] <= rc[c];
+  	
+// Constraint 4 : Total load of all computers should not exceed the one with the biggest load
+forall(c in C)
+	z >= (1/(K_c[c]* rc[c]))* sum(h in H, k in K) rh[h]* x_hk[h,k]* CK[c,k];
+	
+}
+
+//Post-processing
+execute {
+	for (var c=1; c<=nCPUs; c++) {
+		var load=0;
+		for (var t=1; t<=nTasks; t++)
+			for (var h=1; h<=nThreads; h++)
+				load += (rh[h]* TH[t][h]* x_tc[t][c]);
+		load = (1/rc[c])*load;
+		writeln("CPU " + c + " loaded at " + 100*load + "%");
+	}
+};

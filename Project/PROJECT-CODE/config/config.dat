@@ -1,0 +1,18 @@
+# --- Common specific parameters ------------------------------------------------------------------------------
+inputDataFile        = data/project.6.dat;        # Input DAT file
+solutionFile         = output/GREEDY.6.sol;   # Output DAT file (solution)
+solver               = Greedy;                  # Supported solvers: Greedy / Random / GRASP / BRKGA
+maxExecTime          = 600;                      # Maximum execution time in seconds
+verbose              = True;                    # Verbose mode?
+
+# --- Greedy / Random specific parameters ---------------------------------------------------------------------
+# No specific parameters
+
+# --- GRASP constructive specific parameters ------------------------------------------------------------------
+# Ignored if solver is not GRASP.
+alpha                = 0.1;                 # Alpha parameter for the GRASP solver.
+
+# --- Local Search specific parameters ------------------------------------------------------------------------
+localSearch          = False;               # Enable local search?
+neighborhoodStrategy = TaskExchange;        # Supported Neighborhoods: TaskExchange
+policy               = FirstImprovement;    # Supported Policies: FirstImprovement / BestImprovement

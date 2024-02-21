@@ -1,0 +1,72 @@
+/*********************************************
+ * OPL 12.10.0.0 Model
+ * Author: anast
+ * Creation Date: Mar 27, 2023 at 8:42:49 PM
+ *********************************************/
+int nTasks=...;
+int nCPUs=...;
+int K=...;
+range T=1..nTasks;
+range C=1..nCPUs;
+float rt[t in T]=...;
+float rc[c in C]=...;
+dvar boolean x_tc[t in T, c in C];
+dvar float+ z;
+dvar boolean r_k[t in T];
+
+// Pre-processing
+execute {
+	var totalLoad=0;
+	var totalCapacity=0;
+	
+	for (var t=1;t<=nTasks;t++)
+		totalLoad += rt[t];
+	for (var c=1;c<=nCPUs;c++)
+  		totalCapacity += rc[c];
+  			
+	
+	writeln("Total load "+ totalLoad);
+	writeln("Total capacity "+ totalCapacity);
+	
+	if (totalLoad > totalCapacity) {
+  	  writeln("Computers do not have enough capacity");
+  	}
+  	else {
+  	  writeln("Computers have enough capacity");
+  	}
+};
+
+// Objective function
+minimize (sum(t in T) (1-r_k[t])*rt[t]);
+minimize z;
+
+// Constraints
+subject to {
+  
+// Constraint 1: Total load of one task should add up to 1 (meaning it can be assigned to 1 computer)
+forall(t in T)
+	sum(c in C) x_tc[t,c] == 1;
+
+// Constraint 2 : Total load in one computer should not exceed its capacity
+forall(c in C)
+	sum(t in T) rt[t]* x_tc[t,c]* r_k[t] <= rc[c];
+	
+// Constraint 3 : Total load of all computers should not exceed the one with the biggest load
+forall(c in C)
+	z >= (1/rc[c])*sum(t in T) rt[t]* x_tc[t,c]* r_k[t];
+	
+// Constraint 4 : Chosen Tasks are greater or equal than (all the tasks) - K
+forall(t in T)
+	sum(t in T) r_k[t] >= nTasks - K;	
+}
+
+//Post-processing
+execute {
+	for (var c=1;c<=nCPUs;c++) {
+		var load=0;
+		for (var t=1;t<=nTasks;t++)
+			load+=(rt[t]* x_tc[t][c]* r_k[t]);
+		load = (1/rc[c])*load;
+		writeln("CPU " + c + " loaded at " + 100*load + "%");
+	}
+};

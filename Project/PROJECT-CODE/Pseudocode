@@ -1,0 +1,108 @@
+'''
+GREEDY
+'''
+
+# IMPLEMENTATION 1: Exponential steps
+# * Why this works is explained in the report
+
+# 1. Create a list of length n 
+# 2. Set the first element of the list to 0
+# 3. Increment the rest of the elements by exponential of 2
+
+# numbers: list of length n to hold the numbers (solution)
+
+def greedy():
+    numbers[0] = 0
+    for (i=0 to n-1):
+        numbers[i+1] = numbers[i] + 2^i
+
+    return numbers
+
+
+# IMPLEMENTATION 2: Iterative approach
+
+# 1a. Create list of length n
+# 1b. (diffMatrix) Create a 2D matrix to store the difference between the numbers
+# 1c. (diffCounters) Create a list to store the counters of the differences occurrences
+# 2. Set the first element of the list to 0
+# 3. Until the list is complete:
+# 4. Get the smallest unused difference from the diffCounters list (first 0 position)
+# 5. Add this difference to the last element of the list and check if it is feasible
+# 6. If it is feasible, add it to the list
+# 7. Update the diffCounters, diffMatrix and the pointer
+# 8. If it is not feasible, get the next smallest unused difference from the diffCounters list (second 0 position)
+
+# numbers: list of length n to hold the numbers (solution)
+# diffMatrix: 2D matrix to hold the differences between the numbers
+# diffCounters: list to hold the counters of the differences occurrences
+
+def greedy():
+    numbers[0] = 0
+    smallestDiff = getSmallestUnsusedDifference()
+    # Until the list is complete:
+    while length(numbers) < n:
+        # Get last element + smallest unused difference
+        candidate_number = numbers[-1] + smallestDiff
+        # Check if it is feasible (no conflicting differences)
+        if (isFeasibleToAdd(candidate_number)):
+            # Add it to the list
+            numbers.add(candidate_number)
+            # Update the diffCounters, diffMatrix
+            updateDiffCounters(candidate_number)
+            updateDiffMatrix(candidate_number)
+        # Get the next smallest unused difference
+        smallestDiff = getSmallestUnsusedDifference(smallestDiff)
+
+    return numbers
+
+
+
+
+'''
+LOCAL SEARCH 
+'''
+
+# 1. Get the initial solution (Greedy)
+# 2. Decrease the last element by 1 (fitness score)
+# 3. Until you find a feasible solution OR time limit is exceeded:
+# 4a. Increase the element before the last one by 1
+# 4b. If the element becomes equal to the next one on the list 
+#   - reset it to the initial value (greedy solution)
+#   - increase the previous element by 1
+# 5. Update the diffCounters, diffMatrix tables
+# 6. Check if solution if feasible
+# 7. If it is feasible, update the fitness score + Go to step 3
+# 8. If it is not feasible, go to step 5
+
+# solution: the initial solution that the algorithm starts from
+# diffMatrix: 2D matrix to hold the differences between the numbers
+# diffCounters: list to hold the counters of the differences occurrences
+
+function local_search():
+    solution = greedy()
+    # copy of the initial solution
+    neighbor = solution 
+    while (time < time_limit) OR existsAvailableDifferences(solution): # Decrease the last element by 1 until time limit is exceeded
+        neighbor[-1] -= 1
+        # try different combinations starting from the element before the last one
+        combination_idx = -2 
+        # Try all different combinations until you find a feasible solution
+        while True: 
+            neighbor[combination_idx] += 1
+            # If the element becomes equal to the next one on the list
+            if neighbor[combination_idx] == neighbor[combination_idx+1]: 
+                # reset it to the initial value (greedy solution)
+                neighbor[combination_idx] = solution[combination_idx] 
+                combination_idx -= 1
+                continue
+            else if (combination_idx < -2): 
+                combination_idx += 1
+            updateDiffMatrix(neighbor)
+            updateDiffCounters(neighbor)
+            # If solution is feasible, it is better than the previous one because of the dicreased last element
+            if isFeasible(neighbor):  
+                solution = neighbor
+                fitness = neighbor.fitness
+                break
+                
+    return solution

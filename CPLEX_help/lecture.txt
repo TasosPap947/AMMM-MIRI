@@ -1,0 +1,152 @@
+In the lab lectures we will use IBM ILOG CPLEX as a solving tool, and
+OPL, the modelling language of CPLEX, for writing our models.
+
+----------------
+
+EXAMPLE
+
+Consider a chemical company that produces ammoniac gas (NH3) and
+ammonium chloride (NH4Cl). The company has at its disposal 50 units of
+nitrogen (N), 180 units of hydrogen (H), and 40 units of chlorine
+(Cl). It makes a profit of 40 € for each sale of an ammoniac gas unit
+and 50 € for each sale of an ammonium chloride unit. We would like a
+production plan that maximizes the profits given the available stocks.
+
+Here is a model for this problem in OPL
+(<volsay1.mod>).
+
+
+dvar float+ Gas;      // units of ammoniac gas (NH3)        to be produced
+dvar float+ Chloride; // units of ammonium chloride (NH4Cl) to be produced
+
+maximize
+  40 * Gas + 50 * Chloride; /* maximize profit */
+
+subject to {
+  availability_N:             Gas + Chloride <= 50;
+  availability_H:     3 * Gas + 4 * Chloride <= 180;
+  availability_Cl:                  Chloride <= 40;
+}
+
+
+dvar stands for "decision" variable
+float+ declares a continuous (float) non-negative (+) variable
+
+We can use arrays to make the model more compact and readable
+(<volsay2.mod>).
+
+We can separate data from the model, for generality
+(<volsay3.mod>, <volsay3a.dat>, <volsay3b.dat>).
+
+----------------
+
+RUNNING A MODEL
+
+How to run a model (with its data) with CPLEX
+
+(1) Run OPL IDE
+
+   We assume that CPLEX Optimization Studio is already installed.
+
+   The executable for OPL IDE is
+   <installation directory>/ibm/ILOG/CPLEX_Studio1210/opl/oplide/oplide
+
+(2) Create a new OPL project
+    (environment where the LP model, data, etc. live):
+    File -> New -> OPL Project
+    Fill "Project name", e.g. test
+    Mark "Create Model" (and maybe "Create Data")
+    A new file "test.mod" for the model of the project is created
+
+(3) Populate the .mod file
+    Populate from scratch, or
+    File -> Open File in Editor to copy and paste an existing file
+
+    New .mod files can be created as follows:
+    Right-click the project, e.g. test: New -> Model
+
+Alternatively:
+
+    File -> Copy Files to Project
+    Choose directory, and then choose files to copy
+
+(4) Create a run configuration
+    (a model and its data)
+    Right-click the project, e.g. test: New -> Run Configuration
+
+(5) Drag and drop the .mod file (and .data files if needed) on the run configuration
+
+(6) To run a configuration, right-click -> Run this
+
+
+A project is the association of one or more model files, and data
+files (optional), associated in run configurations. A run
+configuration consists of a model file with its data. Model files use
+the file name extension.mod, while data files use the file name
+extension.dat. The model declares the data but does not initialize
+them. The data files contain the initialization instructions for each
+declared data item.
+
+
+Alternatively one can run a model with its data from the command-line, e.g.:
+
+ oplrun volsay3.mod volsay3a.dat
+
+
+----------------
+
+PARTS OF A MODEL FILE
+
+(1) SETS. They represent indices for certain groups of linear
+programming variables / input data.
+
+(2) DATA. They are coefficients for the model, which may be defined in
+arrays or read from external files. The items in the arrays or files
+are often indexed by the indices described above.
+
+(3) VARIABLES. These are the linear programming variables that appear
+in the model, typically defined using a root name together with
+associated indices. The sort of variable (continuous/integer/binary,
+free/non-negative, etc.) is specified in the variable declaration.
+
+(4) OBJECTIVE FUNCTION. Usually uses notation over index sets for
+representing summation compactly.
+
+(5) CONSTRAINTS.
+
+(6) OTHERS. E.g., execute blocks, which may be used to pre/postprocess
+data, writing solutions, etc.:
+
+Execute blocks are written in a different language called IBM ILOG Script
+
+<volsay4.mod>, <volsay4.dat>
+
+(see the output in the "Scripting Log")
+
+
+MAIN BLOCKS
+
+You can, e.g., solve several problems in sequence.
+To do so, you need to add a main block in a .mod file:
+
+main {
+...
+}
+
+When a .mod file contains a main block, the IDE (or the oplrun command)
+starts the execution of the model by running the main block first.
+
+To run a main block, we have to create a new configuration containing
+only the file with the main block (not any other model or data files).
+
+<volsay5.mod>, <volsay6.mod>
+
+
+MORE INFO
+
+* About the OPL IDE:
+Getting_Started_with_the_IDE.pdf
+
+* About the OPL language and IBM ILOG Script:
+OPL_Language_User_Manual.pdf
+OPL_Language_Reference_Manual.pdf (advanced)
